@@ -7,9 +7,10 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
+
 	"github.com/ssvlabs/ssv-dkg/pkgs/utils"
 	"github.com/ssvlabs/ssv-dkg/pkgs/wire"
-	"go.uber.org/zap"
 )
 
 func (s *Server) resultsHandler(writer http.ResponseWriter, request *http.Request) {
@@ -106,9 +107,8 @@ func (s *Server) signedResignHandler(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	reqid := signedResignMsg.Message.Identifier
-	logger := s.Logger.With(zap.String("reqid", hex.EncodeToString(reqid[:])))
-	b, err := s.State.HandleInstanceOperation(reqid, signedResignMsg.Message, signedResignMsg.Signer, signedResignMsg.Signature, "resign")
+	logger := s.Logger.With(zap.String("incoming request ID", hex.EncodeToString(signedResignMsg.Message.Identifier[:])))
+	b, err := s.State.HandleInstanceOperation(signedResignMsg.Message, signedResignMsg.Signer, signedResignMsg.Signature, "resign")
 	if err != nil {
 		s.Logger.Error("Error resigning instance", zap.Error(err))
 		utils.WriteErrorResponse(s.Logger, writer, fmt.Errorf("operator %d, failed to resign, err: %v", s.State.OperatorID, err), http.StatusBadRequest)
@@ -132,9 +132,8 @@ func (s *Server) signedReshareHandler(writer http.ResponseWriter, request *http.
 		return
 	}
 
-	reqid := signedReshareMsg.Message.Identifier
-	logger := s.Logger.With(zap.String("reqid", hex.EncodeToString(reqid[:])))
-	b, err := s.State.HandleInstanceOperation(reqid, signedReshareMsg.Message, signedReshareMsg.Signer, signedReshareMsg.Signature, "reshare")
+	logger := s.Logger.With(zap.String("incoming request ID", hex.EncodeToString(signedReshareMsg.Message.Identifier[:])))
+	b, err := s.State.HandleInstanceOperation(signedReshareMsg.Message, signedReshareMsg.Signer, signedReshareMsg.Signature, "reshare")
 	if err != nil {
 		utils.WriteErrorResponse(s.Logger, writer, fmt.Errorf("operator %d, err: %v", s.State.OperatorID, err), http.StatusBadRequest)
 		return

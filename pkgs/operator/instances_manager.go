@@ -135,7 +135,7 @@ func (s *Switch) cleanInstances() int {
 }
 
 // HandleInstanceOperation handles both Resign and Reshare operations.
-func (s *Switch) HandleInstanceOperation(reqID [24]byte, transportMsg *wire.Transport, initiatorPub, initiatorSignature []byte, operationType string) ([][]byte, error) {
+func (s *Switch) HandleInstanceOperation(transportMsg *wire.Transport, initiatorPub, initiatorSignature []byte, operationType string) ([][]byte, error) {
 	if !bytes.Equal(transportMsg.Version, s.Version) {
 		return nil, fmt.Errorf("wrong version: remote %s local %s", transportMsg.Version, s.Version)
 	}
@@ -194,8 +194,8 @@ func (s *Switch) HandleInstanceOperation(reqID [24]byte, transportMsg *wire.Tran
 
 		resps := [][]byte{}
 		// Run all resign/reshare ceremonies
-		for _, instance := range signedResign.Messages {
-			resp, err := s.runInstance(instance, allOps, initiatorPubKey, operationType)
+		for _, msg := range signedResign.Messages {
+			resp, err := s.runInstance(msg, allOps, initiatorPubKey, operationType)
 			if err != nil {
 				return nil, fmt.Errorf("%s: failed to run instance: %w", operationType, err)
 			}
@@ -245,8 +245,8 @@ func (s *Switch) HandleInstanceOperation(reqID [24]byte, transportMsg *wire.Tran
 
 		resps := [][]byte{}
 		// Run all resign/reshare ceremonies
-		for _, instance := range signedReshare.Messages {
-			resp, err := s.runInstance(instance, allOps, initiatorPubKey, operationType)
+		for _, msg := range signedReshare.Messages {
+			resp, err := s.runInstance(msg, allOps, initiatorPubKey, operationType)
 			if err != nil {
 				return nil, fmt.Errorf("%s: failed to run instance: %w", operationType, err)
 			}
@@ -296,8 +296,8 @@ func (s *Switch) validateInstances(reqID InstanceID) error {
 	return nil
 }
 
-func (s *Switch) runInstance(instance interface{}, allOps []*spec.Operator, initiatorPubKey *rsa.PublicKey, operationType string) ([]byte, error) {
-	reqID, err := utils.GetReqIDfromMsg(instance)
+func (s *Switch) runInstance(msg interface{}, allOps []*spec.Operator, initiatorPubKey *rsa.PublicKey, operationType string) ([]byte, error) {
+	reqID, err := utils.GetReqIDfromMsg(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +305,7 @@ func (s *Switch) runInstance(instance interface{}, allOps []*spec.Operator, init
 		return nil, err
 	}
 
-	inst, resp, err := s.CreateInstance(reqID, allOps, instance, initiatorPubKey)
+	inst, resp, err := s.CreateInstance(reqID, allOps, msg, initiatorPubKey)
 	if err != nil {
 		return nil, fmt.Errorf("%s: failed to create instance: %w", operationType, err)
 	}
