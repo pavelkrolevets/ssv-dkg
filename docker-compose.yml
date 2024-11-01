@@ -296,5 +296,18 @@ services:
     volumes:
       - ./examples:/data
 
+  initiator_server:
+    image: ssv-dkg:latest
+    networks:
+      - shared_network
+    command:
+      [
+        "initiator_server",
+        "--configPath",
+        "/data/config/initiator_server.example.yaml",
+      ]
+    volumes:
+      - ./examples:/data
+
 networks:
   shared_network:
